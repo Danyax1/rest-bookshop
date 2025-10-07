@@ -9,7 +9,7 @@ Booky - online bookshop
 - View a book detail page with full data
 - Admin users can create, edit, delete books/authors
 
-## Base URL: `\`
+## Base URL: `/`
 
 ### Users / Profile
 
@@ -177,5 +177,6 @@ Entities:
 - orders (id, user_id, status, total_amount, created_at)
 - order_items (id, order_id, book_id, quantity, unit_price)
 - cart_items (id, user_id, book_id, quantity)
+- publishers (id, name, description, website)
 
 ![Database model](ER-model.png)
