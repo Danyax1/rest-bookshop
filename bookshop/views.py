@@ -2,48 +2,26 @@ from rest_framework.views import APIView
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
-from .models import Book, Author, Publisher
-from .serializers import BookListSerializer, BookDetailSerializer, AuthorSerializer, PublisherSerializer
-from django.db.models import Q
+from .models import Book, Author, Publisher, User
+from .serializers import BookListSerializer, BookDetailSerializer, AuthorSerializer, PublisherSerializer, UserSerializer
 
-# Books list / create
 class BookListCreateAPIView(APIView):
     def get(self, request):
-        q = request.query_params.get('q')
         publisher_id = request.query_params.get('publisherId')
         genre = request.query_params.get('genre')
-        sort = request.query_params.get('sort') 
 
-        qs = Book.objects.all().prefetch_related('authors','genres','publisher')
-
-        if q:
-            qs = qs.filter(Q(title__icontains=q) | Q(authors__name__icontains=q)).distinct()
+        query_param = Book.objects.all().prefetch_related('authors','genres','publisher')
 
         if publisher_id:
-            qs = qs.filter(publisher_id=publisher_id)
+            query_param = query_param.filter(publisher_id=publisher_id)
 
-        if genre:
-            qs = qs.filter(genres__name__iexact=genre)
-
-        if sort == 'price_asc':
-            qs = qs.order_by('price')
-        elif sort == 'price_desc':
-            qs = qs.order_by('-price')
-        elif sort == 'title_asc':
-            qs = qs.order_by('title')
-        elif sort == 'title_desc':
-            qs = qs.order_by('-title')
-
-        serializer = BookListSerializer(qs, many=True)
+        serializer = BookListSerializer(query_param, many=True)
         return Response({'data': serializer.data})
 
     def post(self, request):
-        # minimal create - expects authors as list of ids, publisher_id, genres as list of names/ids
         data = request.data
         serializer = BookDetailSerializer(data=data)
-        # We'll create manually to support m2m via ids:
         if serializer.is_valid():
-            # ideally use serializer.save with nested work; simplified:
             book = Book.objects.create(
                 title=data['title'],
                 description=data.get('description',''),
@@ -88,20 +66,12 @@ class BookDetailAPIView(APIView):
             return Response(BookDetailSerializer(book).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
-        book = get_object_or_404(Book, pk=pk)
-        book.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
-
 
 class AuthorListCreateAPIView(APIView):
     def get(self, request):
-        q = request.query_params.get('q')
-        qs = Author.objects.all()
-        if q:
-            qs = qs.filter(name__icontains=q)
+        authors = Author.objects.all()
 
-        serializer = AuthorSerializer(qs, many=True)
+        serializer = AuthorSerializer(authors, many=True)
         return Response(serializer.data)
 
     def post(self, request):
@@ -128,18 +98,16 @@ class AuthorDetailAPIView(APIView):
             return Response(AuthorSerializer(author).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
-    def delete(self, request, pk):
+    def delete(self, pk):
         author = get_object_or_404(Author, pk=pk)
         if author.books.exists():
             return Response(
-                {"error":"Cannot delete author while they have books on the site. Remove or reassign books first."},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+                {"error":"Author has books"},
+                status=status.HTTP_400_BAD_REQUEST)
         author.delete()
-        return Response(status=status.HTTP_204_NO_CONTENT)
+        return Response(status=status.HTTP_200_OK)
 
 
-# Publishers
 class PublisherListCreateAPIView(APIView):
     def get(self, request):
         publishers = Publisher.objects.all()
@@ -155,26 +123,27 @@ class PublisherListCreateAPIView(APIView):
 
 class PublisherDetailAPIView(APIView):
     def get(self, request, pk):
-        pub = get_object_or_404(Publisher, pk=pk)
-        data = PublisherSerializer(pub).data
-        data['books'] = BookListSerializer(pub.books.all(), many=True).data
+        publisher = get_object_or_404(Publisher, pk=pk)
+        data = PublisherSerializer(publisher).data
+        data['books'] = BookListSerializer(publisher.books.all(), many=True).data
         return Response(data)
 
     def post(self, request, pk):
-        pub = get_object_or_404(Publisher, pk=pk)
-        serializer = PublisherSerializer(pub, data=request.data, partial=True)
+        publisher = get_object_or_404(Publisher, pk=pk)
+        serializer = PublisherSerializer(publisher, data=request.data, partial=True)
         if serializer.is_valid():
             serializer.save()
-            return Response(PublisherSerializer(pub).data)
+            return Response(PublisherSerializer(publisher).data)
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def delete(self, request, pk):
-        pub = get_object_or_404(Publisher, pk=pk)
-        # simple business rule: either prevent or set book.publisher to null
-        if pub.books.exists():
-            return Response(
-                {"error":"Author has books"},
-                status=status.HTTP_400_BAD_REQUEST
-            )
-        pub.delete()
+        publisher = get_object_or_404(Publisher, pk=pk)
+        publisher.delete()
         return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class UserDetailAPIView(APIView):
+    def get(self, request, pk):
+        user_data = get_object_or_404(User, pk=pk)
+        serializers = UserDetailAPIView(user_data).data
+        return Response({"User":serializers})
+

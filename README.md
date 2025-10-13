@@ -20,6 +20,14 @@ Get current user's profile
   ```json
   { "id": 12, "email":"user@example.com", "name":"Full Name", "role":"user" }
   ```
+#### `GET /users/{id}`
+Admin only. view other users
+- **Responses**
+  - `200 OK`
+  - `404 Not Found
+  ```json
+  { "id": 1, "email":"user@example.com", "name":"Full Name", "role":"user" }
+  ```
 
 #### `PUT /users/me`
 Update profile.
@@ -77,7 +85,7 @@ Create a new book (admin only)
 }
 ```
 - **Responses**
-  - `201 Created` `{ "id": 201, "title":"New Book", ... }`
+  - `201 Created` `{ "id": 201, "title":"New Book", "authors": [1,5], "genres": ["Fantasy","Kids"],"price": 199.50, "publishedDate": "2024-05-01","pages": 320,"coverUrl": "https://..."}`
   - `403 Forbidden` (non-admin)
 
 #### `GET /books/{id}`
@@ -87,6 +95,18 @@ Get full book details
 - **Responses**
   - `200 OK`
   - `404 Not Found`
+```json
+  {
+  "title": "New Book",
+  "description": "Long description",
+  "authors": [1,5], // id
+  "genres": ["Fantasy","Kids"],
+  "price": 199.50,
+  "publishedDate": "2024-05-01",
+  "pages": 320,
+  "coverUrl": "https://..."
+}
+```
 
 #### `PUT /books/{id}`
 Update book (admin)
@@ -110,7 +130,7 @@ Create author (admin)
 Similar to the books
 
 #### `GET /authors/{id}`
-Get author detail including list of their books.
+Get author detail.
 - **200 OK**
 ```json
 {
@@ -118,7 +138,7 @@ Get author detail including list of their books.
   "name": "Author Name",
   "bio": "...",
   "photoUrl":"https://...",
-  "books": [{ "id":101,"title":"...","price":199.5, "thumbnail":"..."}]
+  "booksTitle": [{"title":"..."}, ...]
 }
 ```
 
@@ -127,7 +147,7 @@ Similar to the books
 
 ### Cart
 
-#### `GET /api/v1/cart`
+#### `GET /cart`
 Get current user's cart.
 - **Response**
 ```json
@@ -146,7 +166,7 @@ Add item to cart / update quantity
 #### `DELETE /cart/{bookId}`
 Remove item from cart
 
-#### `POST /cart/checkout`
+#### `POST /order`
 Create an order from the cart 
 - **Response**
   - `201 Created` 

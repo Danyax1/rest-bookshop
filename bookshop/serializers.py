@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import Book, Author, Publisher, Genre
+from .models import Book, Author, Publisher, Genre, User
 
 class AuthorSerializer(serializers.ModelSerializer):
     book_count = serializers.IntegerField(source='books.count')
@@ -35,3 +35,9 @@ class BookDetailSerializer(serializers.ModelSerializer):
     class Meta:
         model = Book
         fields = '__all__'
+
+class UserSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['name', 'email', 'created_at']
+
