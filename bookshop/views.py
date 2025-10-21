@@ -1,4 +1,5 @@
 from rest_framework.views import APIView
+from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.response import Response
 from rest_framework import status
 from django.shortcuts import get_object_or_404
@@ -6,6 +7,10 @@ from .models import Book, Author, Publisher, User
 from .serializers import BookListSerializer, BookDetailSerializer, AuthorSerializer, PublisherSerializer, UserSerializer
 
 class BookListCreateAPIView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request):
         publisher_id = request.query_params.get('publisherId')
         genre = request.query_params.get('genre')
@@ -49,6 +54,10 @@ class BookListCreateAPIView(APIView):
 
 
 class BookDetailAPIView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'PUT':
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request, pk):
         book = get_object_or_404(Book, pk=pk)
         return Response(BookDetailSerializer(book).data)
@@ -68,6 +77,10 @@ class BookDetailAPIView(APIView):
 
 
 class AuthorListCreateAPIView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request):
         authors = Author.objects.all()
 
@@ -82,6 +95,10 @@ class AuthorListCreateAPIView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 class AuthorDetailAPIView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'PUT' or self.request.method == 'DELETE':
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request, pk):
         author = get_object_or_404(Author, pk=pk)
         data = AuthorSerializer(author).data
@@ -109,6 +126,10 @@ class AuthorDetailAPIView(APIView):
 
 
 class PublisherListCreateAPIView(APIView):
+    def get_permissions(self):
+        if self.request.method == 'POST':
+            return [IsAuthenticated()]
+        return [AllowAny()]
     def get(self, request):
         publishers = Publisher.objects.all()
         serializer = PublisherSerializer(publishers, many=True)

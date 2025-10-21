@@ -40,6 +40,7 @@ INSTALLED_APPS = [
     'bookshop',
     'corsheaders',
     'rest_framework',
+    'login',
 ]
 
 MIDDLEWARE = [
