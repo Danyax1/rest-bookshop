@@ -1,0 +1,5 @@
+# Tests
+- pip install pytest pytest-django pytest-pythonpath
+- pytest
+
+![Coverage](image.png)
